@@ -1,0 +1,207 @@
+# ============================================================
+# Lavalink Server Configuration
+# Versión: Lavalink 4.x
+# ============================================================
+# DOCUMENTACIÓN: https://lavalink.dev/configuration/
+# ============================================================
+
+server:
+  port: 2333
+  address: 0.0.0.0
+  http2:
+    enabled: false
+
+plugins:
+  # ------------------------------------------------------------
+  # PLUGIN: youtube-source
+  # Reemplaza el soporte nativo de YouTube de Lavalink.
+  # Necesario porque Lavalink 4.x eliminó YouTube nativo.
+  # Repo: https://github.com/lavalink-devs/youtube-source
+  # ------------------------------------------------------------
+  - dependency: "dev.lavalink.youtube:youtube-plugin:1.11.2"
+    repository: "https://maven.lavalink.dev/releases"
+
+  # ------------------------------------------------------------
+  # PLUGIN: LavaSrc
+  # Añade soporte para Spotify, Apple Music, Deezer, Yandex Music.
+  # Para Spotify: obtiene metadata via API y busca en YouTube.
+  # IMPORTANTE: Requiere SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET.
+  # Repo: https://github.com/topi314/LavaSrc
+  # ------------------------------------------------------------
+  - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.3.0"
+    repository: "https://maven.lavalink.dev/releases"
+
+lavalink:
+  server:
+    password: "${LAVALINK_PASSWORD:-youshallnotpass}"
+
+    # Fuentes de audio habilitadas
+    # YouTube está manejado por el plugin youtube-source (abajo)
+    sources:
+      youtube: false       # Deshabilitado: se usa youtube-source plugin
+      bandcamp: true        # Bandcamp nativo
+      soundcloud: true      # SoundCloud nativo
+      twitch: true          # Twitch streams nativo
+      vimeo: true           # Vimeo nativo
+      nico: false           # NicoNico (japonés, opcional)
+      http: true            # URLs HTTP directas
+      local: false          # Archivos locales (deshabilitado por seguridad)
+
+    # Filtros de audio disponibles
+    filters:
+      volume: true
+      equalizer: true
+      karaoke: true
+      timescale: true
+      tremolo: true
+      vibrato: true
+      distortion: true
+      rotation: true
+      channelMix: true
+      lowPass: true
+
+    # Configuración de rendimiento
+    bufferDurationMs: 400
+    frameBufferDurationMs: 5000
+    opusEncodingQuality: 10
+    resamplingQuality: LOW
+    trackStuckThresholdMs: 10000
+    useSeekGhosting: true
+    youtubePlaylistLoadLimit: 6
+    playerUpdateInterval: 5
+    youtubeSearchEnabled: true
+    soundcloudSearchEnabled: true
+    gc-warnings: true
+
+    # Límites de recursos (ajustar según tu servidor)
+    # ratelimit:
+    #   ipBlocks: []
+    #   excludedIps: []
+    #   strategy: RotateOnBan
+    #   searchTriggersFail: true
+    #   retryLimit: -1
+
+    # Configuración de Lavaplayer
+    lavaplayer:
+      nonAllocatingFrameBuffer: false
+
+# ============================================================
+# Configuración de los plugins
+# ============================================================
+
+# --- youtube-source plugin ---
+youtube:
+  enabled: true
+  allowSearch: true
+  allowDirectVideoIds: true
+  allowDirectPlaylistIds: true
+  # Clientes de YouTube a usar (orden de prioridad)
+  # MUSIC = YouTube Music (mejor para búsquedas de audio)
+  # ANDROID_TESTSUITE = cliente Android de prueba (menos restricciones)
+  # WEB = cliente web normal
+  # TVHTML5EMBEDDED = cliente de TV (útil para videos restringidos)
+  clients:
+    - MUSIC
+    - ANDROID_TESTSUITE
+    - WEB
+    - TVHTML5EMBEDDED
+  # Configuración de caché de manifiestos
+  # Útil para reducir requests a YouTube
+  # videoRefreshIntervalMinutes: 10
+  # playlistLoadLimit: 6
+  # albumLoadLimit: 6
+
+# --- LavaSrc plugin ---
+lavasrc:
+  # Proveedores de búsqueda para resolver tracks no resueltos
+  # El orden importa: se intenta en secuencia hasta encontrar resultado
+  providers:
+    # Primero intenta con el ISRC (código único de una grabación)
+    # Esto da la coincidencia más precisa cuando está disponible
+    - "ytmsearch:\"%ISRC%\""
+    - "ytsearch:\"%ISRC%\""
+    # Fallback: buscar por título + artista en YouTube Music
+    - "ytmsearch:%QUERY%"
+    # Fallback final: YouTube normal
+    - "ytsearch:%QUERY%"
+
+  sources:
+    spotify: true         # Habilitar Spotify (requiere credenciales abajo)
+    applemusic: false     # Apple Music (requiere token de Apple, opcional)
+    deezer: false         # Deezer (requiere masterDecryptionKey, no recomendado sin ella)
+    yandexmusic: false    # Yandex Music (requiere token, opcional)
+    flowerytts: false     # Flowery TTS (text-to-speech, opcional)
+    youtube: true         # YouTube vía LavaSrc (complementa youtube-source)
+
+  spotify:
+    # Credenciales de Spotify (Client Credentials Flow — legal y sin acceso a cuentas)
+    # Obtener en: https://developer.spotify.com/dashboard
+    clientId: "${SPOTIFY_CLIENT_ID}"
+    clientSecret: "${SPOTIFY_CLIENT_SECRET}"
+    # País para disponibilidad de contenido
+    countryCode: "US"
+    # Límites de carga (para evitar timeouts en playlists enormes)
+    playlistLoadLimit: 6    # Máx páginas de playlist (cada página = 100 tracks)
+    albumLoadLimit: 6       # Máx páginas de álbum
+    # Si prefieres buscar en SoundCloud cuando YouTube falla:
+    # localFiles: false
+
+  applemusic:
+    countryCode: "US"
+    mediaAPIToken: ""     # Opcional: token de la Apple Music API
+    playlistLoadLimit: 6
+    albumLoadLimit: 6
+
+  deezer:
+    masterDecryptionKey: ""  # Requerido para Deezer. Sin esto, no funciona.
+
+  yandexmusic:
+    accessToken: ""       # Token de acceso de Yandex Music
+
+  flowerytts:
+    voice: ""
+    translate: false
+    silence: 0
+    speed: 1.0
+    audioFormat: "mp3"
+
+# ============================================================
+# Métricas (opcional — para Prometheus/Grafana)
+# ============================================================
+metrics:
+  prometheus:
+    enabled: false
+    endpoint: /metrics
+
+# ============================================================
+# Sentry (opcional — para tracking de errores)
+# ============================================================
+sentry:
+  dsn: ""
+  environment: ""
+  tags:
+    some_key: some_value
+
+# ============================================================
+# Logging
+# ============================================================
+logging:
+  file:
+    path: ./logs/lavalink.log
+
+  level:
+    root: INFO
+    lavalink: INFO
+
+  request:
+    enabled: true
+    includeClientInfo: true
+    includeHeaders: false
+    includeQueryString: true
+    includePayload: true
+    maxPayloadLength: 10000
+
+  logback:
+    rollingpolicy:
+      max-file-size: 1GB
+      max-history: 30

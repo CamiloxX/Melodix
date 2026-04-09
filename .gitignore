@@ -1,0 +1,55 @@
+# ============================================================
+# .gitignore — Archivos que NO deben subirse a Git
+# ============================================================
+
+# --- Variables de entorno (SECRETOS) ---
+.env
+.env.local
+.env.*.local
+# Permitir solo el ejemplo
+!.env.example
+
+# --- Dependencias de Node.js ---
+node_modules/
+bot/node_modules/
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Plugins de Lavalink (se descargan automáticamente) ---
+lavalink/plugins/
+# Pero mantener el directorio
+!lavalink/plugins/.gitkeep
+
+# --- Archivos de sistema ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IDEs ---
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Docker ---
+# No ignorar docker-compose.yml (es configuración, no secretos)
+
+# --- Build artifacts ---
+dist/
+build/
+.cache/
+
+# --- Next.js (web/) ---
+web/.next/
+web/node_modules/
+web/out/
+web/.vercel/
+
+# --- Datos temporales ---
+*.tmp
+*.temp

@@ -1,0 +1,140 @@
+# ============================================================
+# Docker Compose — Discord Music Bot
+# Servicios: lavalink + discord-bot
+# ============================================================
+# USO:
+#   1. Copia .env.example a .env y completa las variables
+#   2. docker compose up -d
+#   3. docker compose logs -f
+# ============================================================
+
+version: "3.9"
+
+networks:
+  # Red interna para comunicación entre servicios
+  # El bot se conecta a Lavalink usando el nombre del servicio como host
+  musicbot-net:
+    driver: bridge
+
+volumes:
+  lavalink-logs:
+    driver: local
+  bot-logs:
+    driver: local
+
+services:
+
+  # ============================================================
+  # SERVICIO 1: Lavalink (servidor de audio)
+  # ============================================================
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    container_name: musicbot-lavalink
+    restart: unless-stopped
+
+    networks:
+      - musicbot-net
+
+    ports:
+      # Puerto de Lavalink — solo exponer si necesitas acceso externo
+      # Para uso interno (solo el bot), puedes comentar esta línea
+      - "2333:2333"
+
+    volumes:
+      # Configuración principal
+      - ./lavalink/application.yml:/opt/Lavalink/application.yml:ro
+      # Los plugins se descargan aquí al primer arranque
+      - ./lavalink/plugins:/opt/Lavalink/plugins
+      # Logs persistentes
+      - lavalink-logs:/opt/Lavalink/logs
+
+    environment:
+      # Estas variables se inyectan en application.yml via ${VAR}
+      - LAVALINK_PASSWORD=${LAVALINK_PASSWORD:-youshallnotpass}
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID:-}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET:-}
+      # Opciones de la JVM (ajustar según RAM disponible)
+      - _JAVA_OPTIONS=-Xmx512m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication
+
+    # Verificación de salud: comproba que el endpoint HTTP responde
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:2333/version -H 'Authorization: ${LAVALINK_PASSWORD:-youshallnotpass}' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s  # Dar tiempo para que descargue plugins al primer arranque
+
+    # Límites de recursos (ajustar según tu servidor)
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 128M
+
+  # ============================================================
+  # SERVICIO 2: Discord Bot (Node.js)
+  # ============================================================
+  discord-bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: musicbot-bot
+    restart: unless-stopped
+
+    networks:
+      - musicbot-net
+
+    # No exponemos puertos del bot al exterior (no es necesario)
+    # Solo se comunica con Discord via WebSocket y con Lavalink via red interna
+
+    volumes:
+      # Logs persistentes del bot
+      - bot-logs:/app/logs
+
+    environment:
+      # --- Discord ---
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID:-}
+
+      # --- Lavalink ---
+      # Usamos el nombre del servicio Docker como host (resolución DNS interna)
+      - LAVALINK_HOST=lavalink
+      - LAVALINK_PORT=2333
+      - LAVALINK_PASSWORD=${LAVALINK_PASSWORD:-youshallnotpass}
+      - LAVALINK_SECURE=false
+
+      # --- Spotify (opcional, para metadata en el bot) ---
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID:-}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET:-}
+
+      # --- Comportamiento ---
+      - DEFAULT_VOLUME=${DEFAULT_VOLUME:-80}
+      - MAX_QUEUE_SIZE=${MAX_QUEUE_SIZE:-500}
+      - AUTO_DISCONNECT_MS=${AUTO_DISCONNECT_MS:-300000}
+      - DEFAULT_SEARCH_PLATFORM=${DEFAULT_SEARCH_PLATFORM:-ytmsearch}
+      - EMBED_COLOR=${EMBED_COLOR:-5865F2}
+
+      # --- Node.js ---
+      - NODE_ENV=${NODE_ENV:-production}
+
+    # El bot DEPENDE de que Lavalink esté saludable antes de arrancar
+    depends_on:
+      lavalink:
+        condition: service_healthy
+
+    # Límites de recursos
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+
+    # Logging de Docker
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

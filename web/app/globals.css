@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Variables CSS y estilos globales — Melodix Landing Page
+   ============================================================ */
+
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-border: #27272a;
+  --primary: #8b5cf6;
+  --primary-glow: rgba(139, 92, 246, 0.35);
+  --accent: #ec4899;
+  --muted: #71717a;
+}
+
+/* ---- Reset y base ---- */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ---- Scrollbar personalizado ---- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #18181b;
+}
+::-webkit-scrollbar-thumb {
+  background: #52525b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+
+/* ---- Utilidades de texto con gradiente ---- */
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-white {
+    @apply bg-gradient-to-r from-white via-white to-zinc-300 bg-clip-text text-transparent;
+  }
+
+  /* Fondo con patrón de grid sutil */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(139, 92, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 92, 246, 0.06) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* Glassmorphism card */
+  .glass-card {
+    @apply bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/60;
+  }
+
+  /* Glow de foco en input */
+  .focus-glow:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
+  }
+}
+
+/* ---- Blob decorativo de fondo ---- */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  pointer-events: none;
+  animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ---- Separador de sección con gradiente ---- */
+.section-divider {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #8b5cf6, #ec4899);
+  border-radius: 9999px;
+  margin: 0 auto 1.5rem;
+}
+
+/* ---- Animación de barra de progreso ---- */
+@keyframes progress-anim {
+  from { width: 0% }
+  to { width: 63% }
+}
+
+.progress-bar-anim {
+  animation: progress-anim 2.5s 0.5s ease-out forwards;
+  width: 0%;
+}
+
+/* ---- Selection color ---- */
+::selection {
+  background: rgba(139, 92, 246, 0.4);
+  color: white;
+}
