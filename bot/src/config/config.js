@@ -20,6 +20,28 @@ function optionalEnv(name, defaultValue = undefined) {
   return process.env[name] || defaultValue;
 }
 
+/**
+ * Parsea un entero de env con validación de rango.
+ * @param {string} name
+ * @param {number} defaultValue
+ * @param {{min?: number, max?: number}} [opts]
+ */
+function intEnv(name, defaultValue, opts = {}) {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return defaultValue;
+  const n = parseInt(raw, 10);
+  if (Number.isNaN(n)) {
+    throw new Error(`Variable de entorno "${name}" debe ser un entero (recibido: "${raw}")`);
+  }
+  if (opts.min !== undefined && n < opts.min) {
+    throw new Error(`"${name}" debe ser >= ${opts.min} (recibido: ${n})`);
+  }
+  if (opts.max !== undefined && n > opts.max) {
+    throw new Error(`"${name}" debe ser <= ${opts.max} (recibido: ${n})`);
+  }
+  return n;
+}
+
 const config = {
   // --- Discord ---
   discord: {
@@ -33,7 +55,7 @@ const config = {
   // --- Lavalink ---
   lavalink: {
     host: optionalEnv('LAVALINK_HOST', 'lavalink'),
-    port: parseInt(optionalEnv('LAVALINK_PORT', '2333'), 10),
+    port: intEnv('LAVALINK_PORT', 2333, { min: 1, max: 65535 }),
     password: optionalEnv('LAVALINK_PASSWORD', 'youshallnotpass'),
     secure: optionalEnv('LAVALINK_SECURE', 'false') === 'true',
     nodeId: 'main-node',
@@ -48,10 +70,10 @@ const config = {
 
   // --- Comportamiento del bot ---
   bot: {
-    defaultVolume: parseInt(optionalEnv('DEFAULT_VOLUME', '80'), 10),
-    maxQueueSize: parseInt(optionalEnv('MAX_QUEUE_SIZE', '500'), 10),
+    defaultVolume: intEnv('DEFAULT_VOLUME', 80, { min: 1, max: 150 }),
+    maxQueueSize: intEnv('MAX_QUEUE_SIZE', 500, { min: 1, max: 10000 }),
     // Tiempo en ms antes de desconectar si la cola está vacía
-    autoDisconnectMs: parseInt(optionalEnv('AUTO_DISCONNECT_MS', '300000'), 10), // 5 minutos
+    autoDisconnectMs: intEnv('AUTO_DISCONNECT_MS', 300000, { min: 0, max: 3_600_000 }),
     // Plataforma de búsqueda por defecto cuando se escribe texto libre
     defaultSearchPlatform: optionalEnv('DEFAULT_SEARCH_PLATFORM', 'ytmsearch'),
     // Color principal de los embeds (hex sin #)

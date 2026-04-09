@@ -28,21 +28,29 @@ logger.info(`  Entorno: ${config.nodeEnv}`);
 logger.info('==============================================');
 
 // ============================================================
+// WARNINGS DE SEGURIDAD (nunca dejan pasar configs inseguras silenciosamente)
+// ============================================================
+if (config.lavalink.password === 'youshallnotpass') {
+  logger.warn('[Security] ⚠️  LAVALINK_PASSWORD sigue en el valor por defecto "youshallnotpass".');
+  logger.warn('[Security] ⚠️  Cambia este valor en .env antes de exponer Lavalink a internet.');
+}
+if (!config.isDev && config.lavalink.host === 'lavalink' && !config.lavalink.secure) {
+  logger.info('[Security] Lavalink accesible solo por red interna de Docker — ok para prod.');
+}
+
+// ============================================================
 // CREAR CLIENTE DE DISCORD
 // ============================================================
+// Solo se piden los intents estrictamente necesarios.
+// - Guilds: metadata básica de servidores/canales
+// - GuildVoiceStates: OBLIGATORIO para que Lavalink pueda conectarse a voice
+// NO se pide MessageContent, GuildMessages, GuildMembers ni Presences — no hacen falta
+// y pedirlos sin usarlos es un riesgo (principio de mínimo privilegio).
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildVoiceStates, // OBLIGATORIO para Lavalink
-    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates,
   ],
-  // Configuración de caché para optimizar memoria
-  sweepers: {
-    messages: {
-      interval: 300, // segundos
-      lifetime: 1800, // segundos
-    },
-  },
 });
 
 // ============================================================
@@ -160,13 +168,19 @@ client.on('error', (error) => {
 });
 
 process.on('unhandledRejection', (error) => {
-  logger.error(`[Process] Promesa rechazada sin manejar: ${error?.message || error}`);
+  logger.error(`[Process] Promesa rechazada sin manejar: ${error?.message || error}`, {
+    stack: error?.stack,
+  });
 });
 
 process.on('uncaughtException', (error) => {
-  logger.error(`[Process] Excepción no capturada: ${error.message}`);
-  // En producción, considera reiniciar el proceso aquí
-  // process.exit(1);
+  logger.error(`[Process] Excepción no capturada: ${error.message}`, { stack: error.stack });
+  // En producción NUNCA seguimos corriendo con estado potencialmente corrupto:
+  // salimos y dejamos que Docker (restart: unless-stopped) levante un container limpio.
+  if (!config.isDev) {
+    logger.error('[Process] Saliendo del proceso para reinicio limpio por Docker.');
+    process.exit(1);
+  }
 });
 
 // ============================================================

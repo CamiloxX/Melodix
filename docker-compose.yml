@@ -28,17 +28,21 @@ services:
   # SERVICIO 1: Lavalink (servidor de audio)
   # ============================================================
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4
+    # Pineado a versión específica para builds reproducibles.
+    # Actualizar manualmente tras verificar changelog en:
+    # https://github.com/lavalink-devs/Lavalink/releases
+    image: ghcr.io/lavalink-devs/lavalink:4.0.8
     container_name: musicbot-lavalink
     restart: unless-stopped
 
     networks:
       - musicbot-net
 
+    # Lavalink NO se expone a internet. Solo bind a localhost para debug del host.
+    # El bot accede por la red interna de Docker usando el nombre del servicio.
+    # Si no necesitas acceso desde el host, comenta esta sección por completo.
     ports:
-      # Puerto de Lavalink — solo exponer si necesitas acceso externo
-      # Para uso interno (solo el bot), puedes comentar esta línea
-      - "2333:2333"
+      - "127.0.0.1:2333:2333"
 
     volumes:
       # Configuración principal

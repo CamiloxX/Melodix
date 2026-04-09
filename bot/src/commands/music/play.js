@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, escapeMarkdown } = require('discord.js');
 const {
   errorEmbed,
   trackAddedEmbed,
@@ -205,7 +205,7 @@ async function handleGenericQuery(interaction, player, query, sourceType, reques
       embeds: [
         errorEmbed(
           'Error de búsqueda',
-          `No se pudo completar la búsqueda.\n\`${err.message}\`\n\n` +
+          'No se pudo completar la búsqueda.\n\n' +
           'Asegúrate de que Lavalink está corriendo y los plugins están instalados.'
         ),
       ],
@@ -224,12 +224,16 @@ async function processSearchResult(interaction, player, res, originalQuery, requ
   // "empty" - sin resultados
   // "error" - error
 
+  // Siempre escapar input del usuario antes de mostrarlo en embeds — previene que
+  // alguien use formato markdown, menciones (@everyone) o URLs para engañar a otros.
+  const safeQuery = escapeMarkdown(originalQuery).slice(0, 200);
+
   if (!res || res.loadType === 'empty') {
     return interaction.editReply({
       embeds: [
         warningEmbed(
           'Sin resultados',
-          `No encontré nada para: **${originalQuery}**\n\nIntenta con otro término de búsqueda o una URL diferente.`
+          `No encontré nada para: \`${safeQuery}\`\n\nIntenta con otro término de búsqueda o una URL diferente.`
         ),
       ],
     });
@@ -243,8 +247,6 @@ async function processSearchResult(interaction, player, res, originalQuery, requ
     });
   }
 
-  const queueWasEmpty = player.queue.tracks.length === 0 && !player.queue.current;
-
   if (res.loadType === 'playlist') {
     // Playlist completa
     const tracks = res.tracks;
@@ -257,17 +259,33 @@ async function processSearchResult(interaction, player, res, originalQuery, requ
       });
     }
 
-    // Añadir todos los tracks a la cola
-    player.queue.add(tracks);
+    // Enforce MAX_QUEUE_SIZE: no dejar que una playlist enorme agote memoria del bot
+    const spaceLeft = config.bot.maxQueueSize - player.queue.tracks.length;
+    if (spaceLeft <= 0) {
+      return interaction.editReply({
+        embeds: [warningEmbed(
+          'Cola llena',
+          `La cola alcanzó el límite de **${config.bot.maxQueueSize}** canciones. Usa \`/clear\` o espera.`
+        )],
+      });
+    }
+    const tracksToAdd = tracks.slice(0, spaceLeft);
+    const truncated = tracks.length - tracksToAdd.length;
+
+    player.queue.add(tracksToAdd);
 
     // Iniciar reproducción si no estaba reproduciendo
     if (!player.playing) {
       await player.play({ paused: false });
     }
 
-    return interaction.editReply({
-      embeds: [playlistAddedEmbed(playlistName, tracks.length, sourceName, requester)],
-    });
+    const embed = playlistAddedEmbed(playlistName, tracksToAdd.length, sourceName, requester);
+    if (truncated > 0) {
+      embed.setFooter({
+        text: `⚠️ Se truncaron ${truncated} tracks para no exceder el límite de ${config.bot.maxQueueSize}.`,
+      });
+    }
+    return interaction.editReply({ embeds: [embed] });
   }
 
   if (res.loadType === 'track' || res.loadType === 'search') {
@@ -276,7 +294,17 @@ async function processSearchResult(interaction, player, res, originalQuery, requ
 
     if (!track) {
       return interaction.editReply({
-        embeds: [warningEmbed('Sin resultados', `No encontré ningún track para: **${originalQuery}**`)],
+        embeds: [warningEmbed('Sin resultados', `No encontré ningún track para: \`${safeQuery}\``)],
+      });
+    }
+
+    // Enforce MAX_QUEUE_SIZE
+    if (player.queue.tracks.length >= config.bot.maxQueueSize) {
+      return interaction.editReply({
+        embeds: [warningEmbed(
+          'Cola llena',
+          `La cola alcanzó el límite de **${config.bot.maxQueueSize}** canciones. Usa \`/clear\` o espera.`
+        )],
       });
     }
 

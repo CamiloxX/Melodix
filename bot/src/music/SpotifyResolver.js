@@ -4,6 +4,10 @@ const https = require('https');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 
+// Timeout duro para las requests a Spotify — sin esto, una conexión colgada
+// bloquearía el comando /play hasta que Discord invalide el interaction.
+const REQUEST_TIMEOUT_MS = 10_000;
+
 /**
  * SpotifyResolver — Clase auxiliar para interactuar con la API de Spotify.
  *
@@ -74,6 +78,9 @@ class SpotifyResolver {
         });
       });
 
+      req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+        req.destroy(new Error(`Timeout (${REQUEST_TIMEOUT_MS}ms) pidiendo token de Spotify`));
+      });
       req.on('error', reject);
       req.write(body);
       req.end();
@@ -115,6 +122,9 @@ class SpotifyResolver {
         });
       });
 
+      req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+        req.destroy(new Error(`Timeout (${REQUEST_TIMEOUT_MS}ms) en request a ${path}`));
+      });
       req.on('error', reject);
       req.end();
     });

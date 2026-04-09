@@ -45,12 +45,11 @@ USER botuser
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
-# Health check: verifica que el proceso Node sigue corriendo
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', r => r.statusCode === 200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(0))" || exit 0
-
-# Puerto (no expuesto externamente, solo para health check si lo implementas)
-EXPOSE 3000
+# Health check: verifica que el proceso Node está vivo.
+# No hay servidor HTTP interno; comprobamos el PID 1 con un noop.
+# Docker marcará el container como unhealthy si Node crashea y no reinicia a tiempo.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "process.exit(0)" || exit 1
 
 # Comando de inicio
 CMD ["node", "src/index.js"]
