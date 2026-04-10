@@ -99,12 +99,10 @@ plugins:
     allowDirectPlaylistIds: true
     clients:
       - MUSIC
+      - ANDROID
       - IOS
       - WEB
     oauth2:
-      # OAuth2 evita el bloqueo de YouTube en IPs de Docker/VPS.
-      # En el primer arranque imprime en logs: "To authorize, visit: https://..."
-      # Ábrela, inicia sesión con cualquier cuenta Google. Se guarda automático.
       enabled: true
       skipInitialization: false
 
