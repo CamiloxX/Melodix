@@ -100,7 +100,6 @@ plugins:
     clients:
       - MUSIC
       - IOS
-      - TVHTML5EMBEDDED
       - WEB
     oauth2:
       # OAuth2 evita el bloqueo de YouTube en IPs de Docker/VPS.
