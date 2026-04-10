@@ -101,11 +101,13 @@ youtube:
     - IOS
     - TVHTML5EMBEDDED
     - WEB
-  # Configuración de caché de manifiestos
-  # Útil para reducir requests a YouTube
-  # videoRefreshIntervalMinutes: 10
-  # playlistLoadLimit: 6
-  # albumLoadLimit: 6
+  oauth2:
+    # OAuth2 evita el bloqueo de YouTube en IPs de Docker/VPS.
+    # Al arrancar Lavalink por primera vez con esto activado, imprime en los logs
+    # una URL para autorizar. Ábrela en el navegador, inicia sesión con cualquier
+    # cuenta de Google y el token se guarda automáticamente.
+    enabled: true
+    skipInitialization: false
 
 # --- LavaSrc plugin ---
 lavasrc:
