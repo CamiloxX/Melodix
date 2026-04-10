@@ -16,7 +16,9 @@
  * - Cuando añades/modificas/eliminas comandos
  */
 
-require('dotenv').config();
+// Buscar .env primero en la raíz del proyecto (un nivel arriba), luego en bot/
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const { REST, Routes } = require('discord.js');
 const { readdirSync } = require('fs');
