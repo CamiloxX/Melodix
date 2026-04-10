@@ -87,27 +87,27 @@ lavalink:
 # Configuración de los plugins
 # ============================================================
 
-# --- youtube-source plugin ---
-youtube:
-  enabled: true
-  allowSearch: true
-  allowDirectVideoIds: true
-  allowDirectPlaylistIds: true
-  # Clientes de YouTube en orden de prioridad.
-  # IOS e TVHTML5EMBEDDED son los más estables para evitar bloqueos de YouTube.
-  # ANDROID_TESTSUITE fue deprecado y bloqueado frecuentemente.
-  clients:
-    - MUSIC
-    - IOS
-    - TVHTML5EMBEDDED
-    - WEB
-  oauth2:
-    # OAuth2 evita el bloqueo de YouTube en IPs de Docker/VPS.
-    # Al arrancar Lavalink por primera vez con esto activado, imprime en los logs
-    # una URL para autorizar. Ábrela en el navegador, inicia sesión con cualquier
-    # cuenta de Google y el token se guarda automáticamente.
+# ============================================================
+# Configuración de los plugins (van bajo plugins:, no en la raíz)
+# ============================================================
+plugins:
+  # --- youtube-source plugin ---
+  youtube:
     enabled: true
-    skipInitialization: false
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    clients:
+      - MUSIC
+      - IOS
+      - TVHTML5EMBEDDED
+      - WEB
+    oauth2:
+      # OAuth2 evita el bloqueo de YouTube en IPs de Docker/VPS.
+      # En el primer arranque imprime en logs: "To authorize, visit: https://..."
+      # Ábrela, inicia sesión con cualquier cuenta Google. Se guarda automático.
+      enabled: true
+      skipInitialization: false
 
 # --- LavaSrc plugin ---
 lavasrc:
