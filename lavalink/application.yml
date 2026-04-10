@@ -20,7 +20,7 @@ lavalink:
     # Necesario porque Lavalink 4.x eliminó YouTube nativo.
     # Repo: https://github.com/lavalink-devs/youtube-source
     # ----------------------------------------------------------
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.11.2"
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.0"
       repository: "https://maven.lavalink.dev/releases"
 
     # ----------------------------------------------------------
