@@ -93,16 +93,14 @@ youtube:
   allowSearch: true
   allowDirectVideoIds: true
   allowDirectPlaylistIds: true
-  # Clientes de YouTube a usar (orden de prioridad)
-  # MUSIC = YouTube Music (mejor para búsquedas de audio)
-  # ANDROID_TESTSUITE = cliente Android de prueba (menos restricciones)
-  # WEB = cliente web normal
-  # TVHTML5EMBEDDED = cliente de TV (útil para videos restringidos)
+  # Clientes de YouTube en orden de prioridad.
+  # IOS e TVHTML5EMBEDDED son los más estables para evitar bloqueos de YouTube.
+  # ANDROID_TESTSUITE fue deprecado y bloqueado frecuentemente.
   clients:
     - MUSIC
-    - ANDROID_TESTSUITE
-    - WEB
+    - IOS
     - TVHTML5EMBEDDED
+    - WEB
   # Configuración de caché de manifiestos
   # Útil para reducir requests a YouTube
   # videoRefreshIntervalMinutes: 10
