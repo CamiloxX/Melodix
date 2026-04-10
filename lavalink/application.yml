@@ -11,27 +11,25 @@ server:
   http2:
     enabled: false
 
-plugins:
-  # ------------------------------------------------------------
-  # PLUGIN: youtube-source
-  # Reemplaza el soporte nativo de YouTube de Lavalink.
-  # Necesario porque Lavalink 4.x eliminó YouTube nativo.
-  # Repo: https://github.com/lavalink-devs/youtube-source
-  # ------------------------------------------------------------
-  - dependency: "dev.lavalink.youtube:youtube-plugin:1.11.2"
-    repository: "https://maven.lavalink.dev/releases"
-
-  # ------------------------------------------------------------
-  # PLUGIN: LavaSrc
-  # Añade soporte para Spotify, Apple Music, Deezer, Yandex Music.
-  # Para Spotify: obtiene metadata via API y busca en YouTube.
-  # IMPORTANTE: Requiere SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET.
-  # Repo: https://github.com/topi314/LavaSrc
-  # ------------------------------------------------------------
-  - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.3.0"
-    repository: "https://maven.lavalink.dev/releases"
-
 lavalink:
+  # En Lavalink 4.x los plugins van DENTRO de lavalink:, no en la raíz.
+  plugins:
+    # ----------------------------------------------------------
+    # PLUGIN: youtube-source
+    # Reemplaza el soporte nativo de YouTube de Lavalink.
+    # Necesario porque Lavalink 4.x eliminó YouTube nativo.
+    # Repo: https://github.com/lavalink-devs/youtube-source
+    # ----------------------------------------------------------
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.11.2"
+      repository: "https://maven.lavalink.dev/releases"
+
+    # ----------------------------------------------------------
+    # PLUGIN: LavaSrc
+    # Añade soporte para Spotify, Apple Music, Deezer, Yandex Music.
+    # Repo: https://github.com/topi314/LavaSrc
+    # ----------------------------------------------------------
+    - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.3.0"
+      repository: "https://maven.lavalink.dev/releases"
   server:
     password: "${LAVALINK_PASSWORD:-youshallnotpass}"
 
